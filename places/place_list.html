@@ -1,0 +1,61 @@
+<!-- templates/places/place_list.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Places List</title>
+    <!-- Include Leaflet CSS and JS files -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+</head>
+<body>
+    <h1>Places List</h1>
+    <div id="map" style="height: 400px;"></div>
+    <form id="search-form">
+        <input type="text" name="query" placeholder="Search places...">
+        <button type="submit">Search</button>
+    </form>
+
+    <script>
+        // JavaScript code to load the map and display markers
+
+        var map = L.map('map').setView([0, 0], 2); // Set initial map view
+
+        // Add the tile layer (you can use any map tile provider)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Function to add markers to the map
+        function addMarkersToMap(places) {
+            for (var i = 0; i < places.length; i++) {
+                var place = places[i];
+                L.marker([place.latitude, place.longitude])
+                    .bindPopup("<b>" + place.name + "</b><br>" + place.description)
+                    .addTo(map);
+            }
+        }
+
+        // Function to fetch and display search results
+        function searchPlaces(event) {
+            event.preventDefault();
+            var searchQuery = document.querySelector('input[name="query"]').value;
+            fetch('/api/places/search/?query=' + encodeURIComponent(searchQuery))
+                .then(response => response.json())
+                .then(data => {
+                    // Clear existing markers
+                    map.eachLayer(function (layer) {
+                        if (layer instanceof L.Marker) {
+                            map.removeLayer(layer);
+                        }
+                    });
+                    // Add markers for search results
+                    addMarkersToMap(data);
+                });
+        }
+
+        // Attach the searchPlaces function to the form submission event
+        document.getElementById('search-form').addEventListener('submit', searchPlaces);
+    </script>
+</body>
+</html>
